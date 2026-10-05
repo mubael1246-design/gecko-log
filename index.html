@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>루시 · 루나 기록장</title>
+<meta name="theme-color" content="#0b0d0e">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Cinzel:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0b0d0e;--card:#14181a;--line:#2a3133;--ink:#f0e9de;--mute:#9aa29f;--teal:#3fcfc4;--warm:#d9b06a;--red:#e0505a}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:radial-gradient(120% 80% at 50% 0%,#14201f 0%,var(--bg) 60%) fixed;color:var(--ink);font-family:'Gowun Batang',serif;-webkit-font-smoothing:antialiased}
+.vine{position:fixed;top:0;height:100vh;width:70px;z-index:0;pointer-events:none;opacity:.35}
+.vine.l{left:0}.vine.r{right:0;transform:scaleX(-1)}
+@media(max-width:700px){.vine{width:22px;opacity:.22}}
+main{position:relative;z-index:1;max-width:720px;margin:0 auto;padding:22px 26px 80px}
+/* gate */
+#gate{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:16px;padding:20px;position:relative;z-index:1}
+.ring{width:170px;height:170px}
+.ring .snake{transform-origin:100px 100px;animation:spin 50s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+h1{font-family:'Cinzel',serif;letter-spacing:.16em;margin:0;font-size:22px;color:var(--teal);font-weight:700}
+.sub{color:var(--mute);font-size:14px;margin-top:-6px}
+form{display:flex;gap:8px}
+input,select{background:#0f1314;border:1px solid var(--line);color:var(--ink);padding:11px 13px;border-radius:12px;font-size:16px;font-family:inherit}
+input[type=password]{width:190px;text-align:center;letter-spacing:.2em}
+input:focus,select:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 3px #3fcfc422}
+button{background:linear-gradient(135deg,#3fcfc4,#2a9a92);color:#061412;border:0;border-radius:12px;padding:11px 17px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer}
+.err{color:var(--red);font-size:13px;min-height:1em}
+.shake{animation:shake .4s}@keyframes shake{20%,60%{transform:translateX(-7px)}40%,80%{transform:translateX(7px)}}
+/* app */
+#app{display:none}
+header{text-align:center;margin:10px 0 18px}
+header .today{color:var(--mute);font-size:13px;margin-top:6px}
+header a{color:var(--mute);font-size:12px;text-decoration:none;border-bottom:1px dotted var(--line)}
+.tabs{display:flex;gap:8px;justify-content:center;margin:0 0 18px;position:sticky;top:0;padding:8px 0;background:linear-gradient(var(--bg) 70%,transparent);z-index:3}
+.tabs button{background:#121718;color:var(--mute);border:1px solid var(--line);font-weight:400;padding:8px 16px;border-radius:999px}
+.tabs button.on{color:var(--ink);border-color:var(--c,var(--teal));box-shadow:0 0 0 2px color-mix(in srgb,var(--c,var(--teal)) 25%,transparent)}
+.card{background:linear-gradient(180deg,#161b1d,#121617);border:1px solid var(--line);border-radius:18px;padding:16px 16px 14px;margin:0 0 14px;position:relative;overflow:hidden}
+.card h2{font-size:15px;margin:0 0 10px;color:var(--mute);font-weight:400;letter-spacing:.04em;display:flex;align-items:center;gap:8px}
+.card h2::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--c,var(--teal));box-shadow:0 0 8px var(--c,var(--teal))}
+.profile{display:flex;gap:14px;align-items:center}
+.avatar{width:62px;height:62px;border-radius:50%;flex:none;display:grid;place-items:center;border:2px solid var(--c);background:radial-gradient(circle at 35% 30%,color-mix(in srgb,var(--c) 45%,#000),#0e1112)}
+.avatar svg{width:40px;height:40px}
+.name{font-size:22px;font-weight:700}.name small{font-family:'Cinzel',serif;font-size:12px;color:var(--mute);letter-spacing:.12em;margin-left:6px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.chip{font-size:12px;padding:3px 9px;border-radius:999px;border:1px solid var(--line);color:var(--ink);background:#0f1314}
+.note{font-size:13px;color:var(--mute);margin:12px 0 0;line-height:1.6;border-left:2px solid var(--c);padding-left:10px}
+.big{display:flex;gap:10px}
+.big div{flex:1;background:#0f1314;border:1px solid var(--line);border-radius:14px;padding:10px;text-align:center}
+.big b{display:block;font-size:24px;color:var(--c)}.big span{font-size:12px;color:var(--mute)}
+.flag{font-size:13px;margin-top:10px;padding:8px 10px;border-radius:10px;background:#3fcfc414;border:1px solid #3fcfc433}
+.flag.warn{background:#d9b06a14;border-color:#d9b06a44}
+.flag.bad{background:#e0505a14;border-color:#e0505a44}
+svg.chart{width:100%;height:auto;display:block}
+table{width:100%;border-collapse:collapse;font-size:14px;margin-top:8px}
+td{padding:7px 4px;border-top:1px solid var(--line)}td:last-child{color:var(--mute);font-size:12px;text-align:right}
+.ev{display:flex;gap:10px;padding:9px 0;border-top:1px solid var(--line);font-size:14px;line-height:1.5}
+.ev:first-of-type{border-top:0}
+.ev .ic{flex:none;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:#0f1314;border:1px solid var(--line);font-size:15px}
+.ev .d{color:var(--mute);font-size:12px}
+.empty{color:var(--mute);font-size:13px}
+.calc{display:grid;gap:10px}
+.calc label{font-size:13px;color:var(--mute);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.calc .out{font-size:15px;background:#0f1314;border:1px solid var(--line);border-radius:12px;padding:10px 12px;line-height:1.6}
+.calc input[type=number]{width:110px}
+.muted{color:var(--mute);font-size:12px}
+footer{text-align:center;color:var(--mute);font-size:12px;margin-top:28px;opacity:.7}
+.hidden{display:none}
+</style>
+</head>
+<body>
+<svg class="vine l" viewBox="0 0 70 800" preserveAspectRatio="none" aria-hidden="true"><path d="M20 0 C60 80 -10 160 30 240 S60 400 22 480 S55 640 28 800" fill="none" stroke="#3fcfc4" stroke-width="1.6"/><g fill="#3fcfc4" opacity=".8"><ellipse cx="40" cy="90" rx="9" ry="4" transform="rotate(-30 40 90)"/><ellipse cx="14" cy="200" rx="9" ry="4" transform="rotate(30 14 200)"/><ellipse cx="44" cy="330" rx="9" ry="4" transform="rotate(-25 44 330)"/><ellipse cx="18" cy="450" rx="9" ry="4" transform="rotate(35 18 450)"/><ellipse cx="42" cy="580" rx="9" ry="4" transform="rotate(-30 42 580)"/><ellipse cx="20" cy="700" rx="9" ry="4" transform="rotate(30 20 700)"/></g></svg>
+<svg class="vine r" viewBox="0 0 70 800" preserveAspectRatio="none" aria-hidden="true"><path d="M20 0 C60 80 -10 160 30 240 S60 400 22 480 S55 640 28 800" fill="none" stroke="#d9b06a" stroke-width="1.4"/><g fill="#d9b06a" opacity=".7"><ellipse cx="40" cy="130" rx="8" ry="3.5" transform="rotate(-30 40 130)"/><ellipse cx="16" cy="290" rx="8" ry="3.5" transform="rotate(30 16 290)"/><ellipse cx="42" cy="520" rx="8" ry="3.5" transform="rotate(-25 42 520)"/><ellipse cx="18" cy="660" rx="8" ry="3.5" transform="rotate(35 18 660)"/></g></svg>
+
+<section id="gate">
+  <svg class="ring" viewBox="0 0 200 200" aria-hidden="true">
+    <g class="snake">
+      <circle cx="100" cy="100" r="62" fill="none" stroke="#3fcfc4" stroke-width="5" stroke-dasharray="370 20" stroke-linecap="round"/>
+      <circle cx="100" cy="100" r="62" fill="none" stroke="#0b0d0e" stroke-width="1.4" stroke-dasharray="5 8" opacity=".6"/>
+      <path d="M100 38 l10 -6 l-2 10 z" fill="#3fcfc4"/>
+      <g fill="#d9b06a" opacity=".85"><ellipse cx="160" cy="82" rx="7" ry="3" transform="rotate(60 160 82)"/><ellipse cx="44" cy="128" rx="7" ry="3" transform="rotate(60 44 128)"/><ellipse cx="128" cy="157" rx="7" ry="3" transform="rotate(-20 128 157)"/></g>
+    </g>
+    <g transform="translate(100 100)" fill="none" stroke="#d9b06a" stroke-width="2" stroke-linecap="round"><path d="M0 -16 C6 -10 6 -2 0 4 C-6 10 -4 16 2 20"/><circle cx="0" cy="-18" r="4" fill="#d9b06a" stroke="none"/></g>
+  </svg>
+  <h1>LUCY · LUNA</h1>
+  <div class="sub">루시와 루나의 기록장</div>
+  <form id="f"><input id="pw" type="password" placeholder="비밀번호" autocomplete="current-password" autofocus><button>열기</button></form>
+  <div class="err" id="err"></div>
+</section>
+
+<main id="app">
+  <header>
+    <h1>LUCY · LUNA</h1>
+    <div class="today" id="today"></div>
+    <div style="margin-top:8px"><a href="https://mubael1246-design.github.io/nia-board/">← 세 자매의 편지함</a></div>
+  </header>
+  <nav class="tabs" id="tabs"></nav>
+  <div id="views"></div>
+  <section id="shared"></section>
+  <footer>⟲ 기록은 쌓이고, 덮어쓰지 않아</footer>
+</main>
+
+<script>
+const $=s=>document.querySelector(s);
+const b64=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+async function decrypt(pw,file='data.enc.json'){
+  const e=await (await fetch(file+'?t='+Date.now(),{cache:'no-store'})).json();
+  const base=await crypto.subtle.importKey('raw',new TextEncoder().encode(pw),'PBKDF2',false,['deriveKey']);
+  const key=await crypto.subtle.deriveKey({name:'PBKDF2',salt:b64(e.salt),iterations:e.iter,hash:'SHA-256'},base,{name:'AES-GCM',length:256},false,['decrypt']);
+  const pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:b64(e.iv)},key,b64(e.ct));
+  return JSON.parse(new TextDecoder().decode(pt));
+}
+const pad=n=>String(n).padStart(2,'0');
+const now=new Date(), TODAY=`${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}`, MONTH=TODAY.slice(0,7);
+const fmtD=d=>{const [y,m,dd]=d.split('-');return `${+m}월 ${+dd}일`};
+const ICON={'몸무게':'⚖︎','먹이':'🦗','탈피':'✧','합사':'⚭','기타':'·'};
+const GECKO_SVG=c=>`<svg viewBox="0 0 40 40" fill="none" stroke="${c}" stroke-width="2" stroke-linecap="round"><path d="M20 6c4 0 6 3 6 6s-2 5-2 8 3 6 2 10-5 5-7 4"/><path d="M14 10c-3-2-6-1-7 1M26 10c3-2 6-1 7 1M17 22c-4 0-7 2-8 5M24 22c4 0 7 2 8 5"/><circle cx="17" cy="9" r="1.2" fill="${c}"/><circle cx="23" cy="9" r="1.2" fill="${c}"/></svg>`;
+const g2=x=>(+x).toFixed(2);
+let D=null;
+
+function eventsFor(id){return D.log.filter(e=>e.gecko===id||e.gecko==='둘다')}
+function weights(id){return D.log.filter(e=>e.gecko===id&&e.kind==='몸무게'&&e.grams!=null)}
+function crickety(id,date){return D.log.some(e=>e.date===date&&e.kind==='먹이'&&(e.gecko===id||e.gecko==='둘다')&&/귀뚜라미|cricket/i.test(e.value+' '+e.memo))}
+function cgdFor(id,date){
+  const g=D.geckos[id],c=crickety(id,date);
+  if(c&&g.cgd.reduced) return {amt:g.cgd.reduced,label:'귀뚜라미 먹은 날 · 감량',cls:'warn'};
+  if(c) return {amt:g.cgd.base,label:'귀뚜라미 먹은 날 · 감량 기준이 아직 없어 기본량 표시',cls:'warn'};
+  return {amt:g.cgd.base,label:'기본량',cls:''};
+}
+function chart(ws,color){
+  if(!ws.length) return '<div class="empty">아직 몸무게 기록이 없어.</div>';
+  const W=320,H=150,P={l:30,r:14,t:16,b:26};
+  const t=ws.map(w=>Date.parse(w.date)), g=ws.map(w=>w.grams);
+  let t0=Math.min(...t),t1=Math.max(...t); if(t0===t1){t0-=864e5*7;t1+=864e5*7}
+  let lo=Math.min(...g),hi=Math.max(...g),sp=Math.max(hi-lo,hi*.15,1); lo=Math.max(0,lo-sp*.35); hi=hi+sp*.35;
+  const X=v=>P.l+(v-t0)/(t1-t0)*(W-P.l-P.r), Y=v=>H-P.b-(v-lo)/(hi-lo)*(H-P.t-P.b);
+  const pts=ws.map((w,i)=>[X(t[i]),Y(w.grams)]);
+  const path=pts.map((p,i)=>(i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' ');
+  const area=path+` L${pts.at(-1)[0].toFixed(1)} ${H-P.b} L${pts[0][0].toFixed(1)} ${H-P.b} Z`;
+  const gid='g'+Math.random().toString(36).slice(2,7);
+  let grid='';for(let k=0;k<=2;k++){const v=lo+(hi-lo)*k/2;grid+=`<line x1="${P.l}" x2="${W-P.r}" y1="${Y(v)}" y2="${Y(v)}" stroke="#2a3133" stroke-dasharray="2 4"/><text x="${P.l-5}" y="${Y(v)+3}" font-size="9" fill="#9aa29f" text-anchor="end">${Math.round(v)}</text>`}
+  const dots=ws.map((w,i)=>`<circle cx="${pts[i][0]}" cy="${pts[i][1]}" r="4.5" fill="${w.approx?'#14181a':color}" stroke="${color}" stroke-width="2"${w.approx?' stroke-dasharray="2 2"':''}/><text x="${pts[i][0]}" y="${pts[i][1]-9}" font-size="10" fill="#f0e9de" text-anchor="middle">${w.approx?'~':''}${w.grams}g</text><text x="${pts[i][0]}" y="${H-8}" font-size="9" fill="#9aa29f" text-anchor="middle">${+w.date.slice(5,7)}/${+w.date.slice(8)}</text>`).join('');
+  return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="몸무게 그래프"><defs><linearGradient id="${gid}" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="${color}" stop-opacity=".28"/><stop offset="1" stop-color="${color}" stop-opacity="0"/></linearGradient></defs>${grid}<path d="${area}" fill="url(#${gid})"/><path d="${path}" fill="none" stroke="${color}" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>${dots}</svg>`;
+}
+function monthly(id){
+  const ws=weights(id), cur=ws.filter(w=>w.date.slice(0,7)===MONTH), last=ws.at(-1);
+  const d=now.getDate();
+  let cls,msg;
+  if(cur.length){cls='';msg=`✓ 이번 달(${+MONTH.slice(5)}월) 측정 완료 · ${cur.at(-1).grams} g (${fmtD(cur.at(-1).date)})`}
+  else if(d>=26){cls='bad';msg=`! 이번 달 아직 측정 안 함 — 26일이 지났어`}
+  else{cls='warn';msg=`이번 달 아직 측정 전 · ${+MONTH.slice(5)}월 26일 예정 (D-${26-d})`}
+  let trend='';
+  const exact=ws.filter(w=>!w.approx);
+  if(exact.length>=2){const a=exact.at(-2),b=exact.at(-1),df=+(b.grams-a.grams).toFixed(1);trend=`<div class="muted" style="margin-top:6px">지난 측정 대비 ${df>0?'+':''}${df} g (${fmtD(a.date)} → ${fmtD(b.date)})${df<=0?' · 변화 없음/감소라 계속 지켜보기':''}</div>`}
+  else if(ws.length>=2){const a=ws.at(-2),b=ws.at(-1);trend=`<div class="muted" style="margin-top:6px">${a.approx?'~':''}${a.grams} g → ${b.grams} g (이전 값은 대략)</div>`}
+  return `<div class="card" style="--c:${D.geckos[id].color}"><h2>이번 달 성장 체크</h2><div class="flag ${cls}">${msg}</div>${trend}${last?`<div class="muted" style="margin-top:6px">최근 기록: ${last.approx?'~':''}${last.grams} g · ${fmtD(last.date)}</div>`:''}</div>`;
+}
+function view(id){
+  const g=D.geckos[id], c=g.color, ws=weights(id), cg=cgdFor(id,TODAY), ev=eventsFor(id).filter(e=>e.kind!=='몸무게').slice().reverse();
+  return `<div class="view" data-id="${id}" style="--c:${c}">
+  <div class="card"><div class="profile"><div class="avatar">${GECKO_SVG(c)}</div><div><div class="name">${esc(g.ko)}<small>${esc(id.toUpperCase())}</small></div>
+    <div class="chips"><span class="chip">${esc(g.morph)}</span><span class="chip">${esc(g.sex)}</span>${g.enclosure?`<span class="chip">사육장 ${esc(g.enclosure)}</span>`:''}${ws.length?`<span class="chip">${ws.at(-1).approx?'~':''}${ws.at(-1).grams} g</span>`:''}</div></div></div>
+    ${g.note?`<p class="note">${esc(g.note)}</p>`:''}</div>
+  <div class="card"><h2>오늘의 CGD · ${fmtD(TODAY)}</h2>
+    <div class="big"><div><b>${g2(cg.amt.powder)} g</b><span>파우더</span></div><div><b>${g2(cg.amt.water)} g</b><span>물</span></div></div>
+    <div class="flag ${cg.cls}">${esc(cg.label)}</div></div>
+  ${g.monthlyGrowthCheck?monthly(id):''}
+  <div class="card"><h2>몸무게 기록</h2>${chart(ws,c)}
+    <table>${ws.slice().reverse().map(w=>`<tr><td>${fmtD(w.date)} <span class="muted">${w.date.slice(0,4)}</span></td><td><b>${w.approx?'~':''}${w.grams} g</b></td><td>${esc(w.memo)}</td></tr>`).join('')}</table>
+    ${ws.some(w=>w.approx)?'<div class="muted" style="margin-top:6px">~ 와 점선 동그라미는 대략적인 값</div>':''}
+    ${g.weighSchedule?`<div class="muted">측정: ${esc(g.weighSchedule)}</div>`:''}</div>
+  <div class="card"><h2>이벤트</h2>${ev.length?ev.map(e=>`<div class="ev"><div class="ic">${ICON[e.kind]||'·'}</div><div><div class="d">${fmtD(e.date)} · ${esc(e.kind)}${e.gecko==='둘다'?' · 둘 다':''}${e.value?' · '+esc(e.value):''}</div>${esc(e.memo)}</div></div>`).join(''):'<div class="empty">아직 이벤트가 없어.</div>'}</div>
+  </div>`;
+}
+function shared(){
+  const h=D.housing||{}, eq=D.equipment||[], v=D.vets||{}, ids=Object.keys(D.geckos);
+  return `
+  <div class="card"><h2>CGD 계산기</h2><div class="calc">
+    <label>개체 <select id="cg">${ids.map(i=>`<option value="${i}">${esc(D.geckos[i].ko)}</option>`).join('')}</select>
+      <label style="margin:0"><input type="checkbox" id="cc"> 귀뚜라미 먹은 날</label></label>
+    <div class="out" id="co"></div>
+    <label>파우더 직접 입력 <input type="number" id="cp" min="0" step="0.01" placeholder="0.50"> g</label>
+    <div class="out" id="cpo">파우더 양을 넣으면 물 양을 알려 줄게.</div>
+    <div class="muted">물 비율 1 : 2.2 는 지금 기록된 급여량들에서 계산한 값이야.</div>
+  </div></div>
+  <div class="card"><h2>합사 · 사육</h2><div class="flag warn">${esc(h.status||'')}</div>${h.memo?`<p class="note" style="--c:var(--warm)">${esc(h.memo)}</p>`:''}</div>
+  <div class="card"><h2>장비 · 사육장</h2>${eq.map(e=>`<div class="ev"><div class="ic">▢</div><div><div class="d">${e.date?fmtD(e.date)+' · ':''}${esc(e.status||'')}</div><b>${esc(e.title)}</b><br>${esc(e.text)}</div></div>`).join('')||'<div class="empty">없음</div>'}</div>
+  <div class="card"><h2>동물병원 · ${esc(v.area||'')}</h2><p class="note" style="--c:var(--teal);margin-top:0">${esc(v.memo||'')}</p>
+    ${(v.list||[]).length?v.list.map(x=>`<div class="ev"><div class="ic">✚</div><div><b>${esc(x.name)}</b>${x.area?' · '+esc(x.area):''}<br><span class="muted">${esc(x.phone||'')} ${esc(x.memo||'')}</span></div></div>`).join(''):'<div class="empty" style="margin-top:8px">아직 채운 병원이 없어.</div>'}</div>`;
+}
+function calc(){
+  const id=$('#cg').value,g=D.geckos[id],cc=$('#cc').checked;
+  let a=g.cgd.base,t='기본량';
+  if(cc){if(g.cgd.reduced){a=g.cgd.reduced;t='귀뚜라미 먹은 날 감량'}else t='감량 기준이 아직 없어 기본량'}
+  $('#co').innerHTML=`${esc(g.ko)} · ${t}<br><b>파우더 ${g2(a.powder)} g + 물 ${g2(a.water)} g</b>`;
+  const p=parseFloat($('#cp').value);
+  $('#cpo').innerHTML=p>0?`파우더 ${p} g → <b>물 ${(p*2.2).toFixed(2)} g</b>`:'파우더 양을 넣으면 물 양을 알려 줄게.';
+}
+function show(id){
+  document.querySelectorAll('.view').forEach(v=>v.classList.toggle('hidden',v.dataset.id!==id));
+  document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.id===id));
+  try{localStorage.setItem('gecko-tab',id)}catch(e){}
+}
+function render(){
+  const ids=Object.keys(D.geckos);
+  $('#today').textContent=`오늘 ${now.getFullYear()}년 ${fmtD(TODAY)}`;
+  $('#tabs').innerHTML=ids.map(i=>`<button data-id="${i}" style="--c:${D.geckos[i].color}">${esc(D.geckos[i].ko)}</button>`).join('');
+  $('#views').innerHTML=ids.map(view).join('');
+  $('#shared').innerHTML=shared();
+  $('#tabs').onclick=e=>{const b=e.target.closest('button');if(b)show(b.dataset.id)};
+  ['#cg','#cc','#cp'].forEach(s=>$(s).addEventListener('input',calc));calc();
+  let t=null;try{t=localStorage.getItem('gecko-tab')}catch(e){}
+  show(ids.includes(t)?t:ids[0]);
+}
+$('#f').onsubmit=async e=>{
+  e.preventDefault();$('#err').textContent='여는 중…';
+  try{D=await decrypt($('#pw').value);try{sessionStorage.setItem('gecko-pw',$('#pw').value)}catch(_){}
+    $('#gate').style.display='none';$('#app').style.display='block';render();}
+  catch(x){$('#err').textContent='비밀번호가 달라.';$('#f').classList.remove('shake');void $('#f').offsetWidth;$('#f').classList.add('shake')}
+};
+(async()=>{try{const p=sessionStorage.getItem('gecko-pw');if(p){$('#pw').value=p;$('#f').requestSubmit()}}catch(e){}})();
+</script>
+</body>
+</html>
