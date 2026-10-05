@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>코라의 작업실 · 루틴 상태판</title>
+<meta name="theme-color" content="#08111f">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Cinzel:wght@500;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#08111f;--panel:#0d1a2c;--line:#1f3550;--ink:#e6f1f3;--mute:#8aa0b2;--teal:#3fcfc4;--nia:#d9b06a;--mina:#e0505a;--quiet:#9fb4ff;--grey:#6b7a8a;--fail:#ff6b6b;--skip:#8fa3b8}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;color:var(--ink);font-family:'Gowun Batang',serif;-webkit-font-smoothing:antialiased;background-color:var(--bg);
+ background-image:linear-gradient(#3fcfc40c 1px,transparent 1px),linear-gradient(90deg,#3fcfc40c 1px,transparent 1px),linear-gradient(#3fcfc41a 1px,transparent 1px),linear-gradient(90deg,#3fcfc41a 1px,transparent 1px),radial-gradient(120% 70% at 50% 0%,#0f2238 0%,var(--bg) 65%);
+ background-size:16px 16px,16px 16px,80px 80px,80px 80px,100% 100%;background-attachment:fixed}
+.mono{font-family:'JetBrains Mono',monospace}
+svg.circuit{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;opacity:.55}
+svg.circuit path{fill:none;stroke:var(--teal);stroke-width:1.2;filter:drop-shadow(0 0 3px #3fcfc4)}
+svg.circuit .flow{stroke-dasharray:6 180;animation:flow 9s linear infinite;stroke-width:2;opacity:.9}
+svg.circuit circle{fill:var(--bg);stroke:var(--teal);stroke-width:1.2;filter:drop-shadow(0 0 3px #3fcfc4)}
+@keyframes flow{to{stroke-dashoffset:-186}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important}}
+main{position:relative;z-index:1;max-width:760px;margin:0 auto;padding:20px 16px 70px}
+/* gate */
+#gate{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:14px;padding:20px;position:relative;z-index:1}
+.emblem{width:150px;height:150px}
+.emblem .rot{transform-origin:100px 100px;animation:spin 60s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+h1{font-family:'Cinzel',serif;letter-spacing:.18em;margin:0;font-size:21px;color:var(--teal);text-shadow:0 0 12px #3fcfc466}
+.sub{color:var(--mute);font-size:14px;margin-top:-4px}
+form{display:flex;gap:8px}
+input{background:#071020;border:1px solid var(--line);color:var(--ink);padding:11px 13px;border-radius:10px;font-size:16px;font-family:inherit;width:190px;text-align:center;letter-spacing:.2em}
+input:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 3px #3fcfc422}
+button{background:linear-gradient(135deg,#3fcfc4,#2a8f9a);color:#04131a;border:0;border-radius:10px;padding:11px 17px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer}
+.err{color:var(--fail);font-size:13px;min-height:1em}
+.shake{animation:shake .4s}@keyframes shake{20%,60%{transform:translateX(-7px)}40%,80%{transform:translateX(7px)}}
+/* app */
+#app{display:none}
+header{text-align:center;margin:4px 0 14px}
+header .emblem{width:84px;height:84px}
+.links{display:flex;gap:14px;justify-content:center;margin-top:8px;font-size:12px}
+.links a{color:var(--mute);text-decoration:none;border-bottom:1px dotted var(--line)}
+.console{background:linear-gradient(180deg,#0e1d31,#0a1626);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:16px;box-shadow:inset 0 0 0 1px #3fcfc40d,0 0 24px #3fcfc40a}
+.clock{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
+.clock b{font-size:26px;color:var(--teal);text-shadow:0 0 10px #3fcfc455;letter-spacing:.04em}
+.clock span{font-size:12px;color:var(--mute)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 12px;margin-top:10px;font-size:12px;color:var(--mute)}
+.legend i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:middle;background:var(--c);box-shadow:0 0 6px var(--c)}
+.notes{margin:10px 0 0;padding:0;list-style:none;font-size:12px;color:var(--mute);line-height:1.6}
+.notes li::before{content:'› ';color:var(--teal)}
+.owner{margin:22px 0 10px;display:flex;align-items:center;gap:10px}
+.owner h2{margin:0;font-size:17px;color:var(--c)}
+.owner h2 small{font-family:'Cinzel',serif;font-size:11px;letter-spacing:.14em;color:var(--mute);margin-left:6px}
+.owner .rule{flex:1;height:1px;background:linear-gradient(90deg,var(--c),transparent);opacity:.5}
+.owner .cnt{font-size:11px;color:var(--mute)}
+.pnote{font-size:12px;color:var(--mute);margin:-4px 0 10px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:380px){.grid{grid-template-columns:1fr}}
+@media(min-width:620px){.grid{grid-template-columns:1fr 1fr 1fr}}
+.inst{position:relative;background:linear-gradient(180deg,#0f2036,#0b1729);border:1px solid var(--line);border-radius:14px;padding:10px 10px 11px;overflow:hidden}
+.inst::before,.inst::after{content:'';position:absolute;width:5px;height:5px;border-radius:50%;background:#1d3350;box-shadow:inset 0 0 0 1px #2c4a6d;top:6px}
+.inst::before{left:6px}.inst::after{right:6px}
+.inst .nm{font-size:13px;line-height:1.35;min-height:2.7em;padding:0 10px;text-align:center}
+.gauge{display:block;width:100%;max-width:150px;margin:2px auto 0}
+.read{text-align:center;margin-top:-6px}
+.read .nx{font-size:15px;color:var(--ink)}
+.read .in{font-size:11px;color:var(--mute)}
+.sched{font-size:10.5px;color:var(--mute);text-align:center;margin-top:6px;letter-spacing:.02em}
+.st{display:flex;align-items:center;justify-content:center;gap:6px;margin-top:8px;font-size:12px;padding:5px 6px;border-radius:8px;background:#ffffff06;border:1px solid #ffffff0d}
+.led{width:8px;height:8px;border-radius:50%;background:var(--s);box-shadow:0 0 8px var(--s);flex:none}
+.st.success .led{animation:pulse 2.6s ease-in-out infinite}
+.st.quiet .led{animation:pulse 5s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.35}}
+.last{font-size:10.5px;color:var(--mute);text-align:center;margin-top:4px}
+.tag{font-size:10.5px;color:var(--mute);text-align:center;margin-top:4px;opacity:.85}
+.ev .radar{display:block;width:100%;max-width:150px;margin:2px auto 0}
+.ev .radar .sweep{transform-origin:60px 46px;animation:spin 6s linear infinite}
+footer{text-align:center;color:var(--mute);font-size:12px;margin-top:30px;opacity:.85}
+.lock{background:none;border:1px solid #ffffff22;color:var(--mute);padding:6px 12px;border-radius:999px;font-size:12px;margin-top:10px;cursor:pointer;font-weight:400}
+</style>
+</head>
+<body>
+<svg class="circuit" viewBox="0 0 400 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+  <path d="M0 120 H60 L90 150 V320 L120 350 H170"/><path class="flow" d="M0 120 H60 L90 150 V320 L120 350 H170"/><circle cx="170" cy="350" r="3.5"/>
+  <path d="M400 70 H330 L300 100 V210 L270 240 H230"/><path class="flow" style="animation-delay:-3s" d="M400 70 H330 L300 100 V210 L270 240 H230"/><circle cx="230" cy="240" r="3.5"/>
+  <path d="M0 640 H40 L70 610 V500 L100 470 H140"/><circle cx="140" cy="470" r="3.5"/>
+  <path d="M400 560 H350 L320 590 V720 L290 750 H250"/><path class="flow" style="animation-delay:-6s" d="M400 560 H350 L320 590 V720 L290 750 H250"/><circle cx="250" cy="750" r="3.5"/>
+  <path d="M30 900 V820 L60 790 H110"/><circle cx="110" cy="790" r="3"/>
+  <path d="M370 900 V840 L340 810 H300"/><circle cx="300" cy="810" r="3"/>
+</svg>
+
+<template id="emblemT">
+  <svg class="emblem" viewBox="0 0 200 200" aria-hidden="true">
+    <defs><filter id="gl"><feGaussianBlur stdDeviation="2.2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+    <g class="rot" filter="url(#gl)">
+      <circle cx="100" cy="100" r="60" fill="none" stroke="#3fcfc4" stroke-width="5" stroke-dasharray="356 21" stroke-linecap="round"/>
+      <path d="M100 40 l11 -6 l-3 11 z" fill="#3fcfc4"/>
+      <path d="M100 40 C130 30 160 50 160 80 C170 110 150 150 120 158 C90 170 50 155 42 120 C32 90 55 50 85 44" fill="none" stroke="#d9b06a" stroke-width="1.6" opacity=".9"/>
+      <g fill="#d9b06a"><ellipse cx="148" cy="56" rx="7" ry="3" transform="rotate(45 148 56)"/><ellipse cx="163" cy="104" rx="7" ry="3" transform="rotate(100 163 104)"/><ellipse cx="135" cy="152" rx="7" ry="3" transform="rotate(150 135 152)"/><ellipse cx="72" cy="160" rx="7" ry="3" transform="rotate(20 72 160)"/><ellipse cx="40" cy="104" rx="7" ry="3" transform="rotate(80 40 104)"/><ellipse cx="60" cy="56" rx="7" ry="3" transform="rotate(-40 60 56)"/></g>
+    </g>
+    <g stroke="#3fcfc4" stroke-width="2" fill="none" stroke-linecap="round" filter="url(#gl)">
+      <circle cx="100" cy="100" r="16"/><path d="M100 84v-6M100 116v6M84 100h-6M116 100h6M89 89l-4-4M111 111l4 4M111 89l4-4M89 111l-4 4"/>
+    </g>
+    <circle cx="100" cy="100" r="4" fill="#e0505a"/>
+  </svg>
+</template>
+
+<section id="gate">
+  <div class="em"></div>
+  <h1>CORA'S WORKSHOP</h1>
+  <div class="sub">코라의 작업실 · 루틴 상태판</div>
+  <form id="f"><input id="pw" type="password" placeholder="비밀번호" autocomplete="current-password" autofocus><button>열기</button></form>
+  <div class="err" id="err"></div>
+</section>
+
+<main id="app">
+  <header>
+    <div class="em"></div>
+    <h1>CORA'S WORKSHOP</h1>
+    <div class="sub" style="margin-top:4px">세 자매 루틴 계기판</div>
+    <div class="links"><a href="../">루시·루나 기록장</a><a href="https://mubael1246-design.github.io/nia-board/">세 자매의 편지함</a></div>
+  </header>
+  <section class="console">
+    <div class="clock"><b class="mono" id="clk">--:--</b><span id="clkd"></span></div>
+    <div class="legend" id="legend"></div>
+    <ul class="notes" id="notes"></ul>
+  </section>
+  <div id="owners"></div>
+  <footer><span id="upd"></span><br><button class="lock" id="lock">잠그기</button></footer>
+</main>
+
+<script>
+const $=s=>document.querySelector(s);
+const b64=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+async function decrypt(pw,file='data.enc.json'){
+  const e=await (await fetch(file+'?t='+Date.now(),{cache:'no-store'})).json();
+  const base=await crypto.subtle.importKey('raw',new TextEncoder().encode(pw),'PBKDF2',false,['deriveKey']);
+  const key=await crypto.subtle.deriveKey({name:'PBKDF2',salt:b64(e.salt),iterations:e.iter,hash:'SHA-256'},base,{name:'AES-GCM',length:256},false,['decrypt']);
+  const pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:b64(e.iv)},key,b64(e.ct));
+  return JSON.parse(new TextDecoder().decode(pt));
+}
+document.querySelectorAll('.em').forEach(el=>el.appendChild($('#emblemT').content.cloneNode(true)));
+
+/* ---- KST time helpers (device timezone independent) ---- */
+const KST=9*3600e3, DAY=864e5, WD='일월화수목금토';
+const pad=n=>String(n).padStart(2,'0');
+const kp=ms=>{const d=new Date(ms+KST);return{y:d.getUTCFullYear(),m:d.getUTCMonth(),d:d.getUTCDate(),w:d.getUTCDay(),h:d.getUTCHours(),mi:d.getUTCMinutes()}};
+const kms=(y,m,d,h,mi)=>Date.UTC(y,m,d,h,mi)-KST;
+const parseAt=s=>{const[a,b]=s.split('T'),[y,m,d]=a.split('-').map(Number),[h,mi]=b.split(':').map(Number);return kms(y,m-1,d,h,mi)};
+function dayMatch(s,p){return s.type==='daily'||(s.type==='weekly'&&s.days.includes(p.w))||(s.type==='monthly'&&s.day===p.d)}
+function occ(s,now,dir){ // dir=1 next (>now), dir=-1 previous (<=now)
+  const t0=kp(now);const times=s.times.map(t=>t.split(':').map(Number)).sort((a,b)=>dir*(a[0]*60+a[1]-b[0]*60-b[1]));
+  for(let o=0;o<=70;o++){const base=Date.UTC(t0.y,t0.m,t0.d+dir*o);const p=kp(base-KST);if(!dayMatch(s,p))continue;
+    for(const[h,mi]of times){const ms=kms(p.y,p.m,p.d,h,mi);if(dir>0?ms>now:ms<=now)return ms}}
+  return null;
+}
+const fmtT=ms=>{const p=kp(ms);return `${pad(p.h)}:${pad(p.mi)}`};
+const fmtDay=(ms,now)=>{const p=kp(ms),n=kp(now);const dd=Math.round((Date.UTC(p.y,p.m,p.d)-Date.UTC(n.y,n.m,n.d))/DAY);
+  return dd===0?'오늘':dd===1?'내일':dd===-1?'어제':`${p.m+1}/${p.d}(${WD[p.w]})`};
+const fmtIn=ms=>{let m=Math.max(0,Math.round(ms/6e4));const d=Math.floor(m/1440);m-=d*1440;const h=Math.floor(m/60);m-=h*60;
+  return d?`${d}일 ${h}시간 후`:h?`${h}시간 ${m}분 후`:m?`${m}분 후`:'곧'};
+function schedText(s){
+  if(s.type==='event')return '이벤트 트리거';
+  const t=s.times.join(' · ');
+  if(s.type==='daily')return `매일 ${t}`;
+  if(s.type==='weekly')return `매주 ${s.days.map(d=>WD[d]).join('·')} ${t}`;
+  if(s.type==='monthly')return `매월 ${s.day}일 ${t}`;
+}
+/* ---- status ---- */
+const ST={success:{t:'정상 실행',c:'var(--teal)'},quiet:{t:'조용히 쉰 날',c:'var(--quiet)'},skipped:{t:'건너뜀 · 오류 아님',c:'var(--skip)'},fail:{t:'실패',c:'var(--fail)'},none:{t:'기록 없음',c:'var(--grey)'},ran:{t:'실행됨',c:'var(--teal)'},notran:{t:'실행 안 됨',c:'var(--skip)'}};
+function stateOf(r,owner){
+  if(!r.last)return'none';
+  if(owner.privacy==='names')return (r.last.result==='success'||r.last.result==='quiet')?'ran':'notran';
+  return r.last.result;
+}
+function gauge(frac,color){
+  const R=48,cx=60,cy=56,a0=Math.PI,ang=a0-Math.PI*Math.min(1,Math.max(0,frac));
+  const pt=a=>[cx+R*Math.cos(a),cy-R*Math.sin(a)];
+  const [x1,y1]=pt(a0),[x2,y2]=pt(0),[xe,ye]=pt(ang),[nx,ny]=[cx+(R-10)*Math.cos(ang),cy-(R-10)*Math.sin(ang)];
+  let ticks='';for(let i=0;i<=10;i++){const a=a0-Math.PI*i/10,[ax,ay]=[cx+(R+5)*Math.cos(a),cy-(R+5)*Math.sin(a)],[bx,by]=[cx+(R+(i%5?8:11))*Math.cos(a),cy-(R+(i%5?8:11))*Math.sin(a)];ticks+=`<line x1="${ax.toFixed(1)}" y1="${ay.toFixed(1)}" x2="${bx.toFixed(1)}" y2="${by.toFixed(1)}" stroke="#4a6a8a" stroke-width="1"/>`}
+  return `<svg class="gauge" viewBox="0 -6 120 70"><path d="M${x1} ${y1} A${R} ${R} 0 0 1 ${x2} ${y2}" fill="none" stroke="#1a2d45" stroke-width="7" stroke-linecap="round"/>
+  ${frac>0.005?`<path d="M${x1} ${y1} A${R} ${R} 0 0 1 ${xe.toFixed(2)} ${ye.toFixed(2)}" fill="none" stroke="${color}" stroke-width="7" stroke-linecap="round" style="filter:drop-shadow(0 0 4px ${color})"/>`:''}
+  ${ticks}<line x1="${cx}" y1="${cy}" x2="${nx.toFixed(2)}" y2="${ny.toFixed(2)}" stroke="#e6f1f3" stroke-width="1.6" stroke-linecap="round"/><circle cx="${cx}" cy="${cy}" r="3.5" fill="#e6f1f3"/></svg>`;
+}
+function radar(color){
+  return `<svg class="radar" viewBox="0 -4 120 66"><defs><linearGradient id="sw" x1="0" x2="1"><stop offset="0" stop-color="${color}" stop-opacity="0"/><stop offset="1" stop-color="${color}" stop-opacity=".55"/></linearGradient></defs>
+  <circle cx="60" cy="46" r="40" fill="none" stroke="#1a2d45" stroke-width="1.2"/><circle cx="60" cy="46" r="26" fill="none" stroke="#1a2d45"/><circle cx="60" cy="46" r="12" fill="none" stroke="#1a2d45"/>
+  <g class="sweep"><path d="M60 46 L100 46 A40 40 0 0 0 88 18 Z" fill="url(#sw)"/></g><circle cx="60" cy="46" r="3" fill="${color}" style="filter:drop-shadow(0 0 4px ${color})"/></svg>`;
+}
+let D=null;
+function inst(r,o,now){
+  const s=r.schedule, st=stateOf(r,o), S=ST[st];
+  const last=r.last?`<div class="last mono">마지막 ${fmtDay(parseAt(r.last.at),now)} ${r.last.at.slice(11)}</div>`:'';
+  const tag=r.note?`<div class="tag">${esc(r.note)}</div>`:'';
+  if(s.type==='event'){
+    return `<div class="inst ev"><div class="nm">${esc(r.name)}</div>${radar(o.color)}
+      <div class="read"><div class="nx">대기 중</div><div class="in">${esc(s.trigger)}</div></div>
+      <div class="sched">이벤트 트리거 · 다음 예정 시각 없음</div>
+      <div class="st ${st}" style="--s:${S.c}"><span class="led"></span>${S.t}</div>${last}${tag}</div>`;
+  }
+  const nx=occ(s,now,1), pv=occ(s,now,-1), frac=(nx&&pv)?(now-pv)/(nx-pv):0;
+  return `<div class="inst"><div class="nm">${esc(r.name)}</div>${gauge(frac,o.color)}
+    <div class="read"><div class="nx mono">${nx?fmtDay(nx,now)+' '+fmtT(nx):'—'}</div><div class="in">${nx?fmtIn(nx-now):''}</div></div>
+    <div class="sched">${esc(schedText(s))}</div>
+    <div class="st ${st}" style="--s:${S.c}"><span class="led"></span>${S.t}</div>${last}${tag}</div>`;
+}
+function render(){
+  const now=Date.now(), p=kp(now);
+  $('#clk').textContent=`${pad(p.h)}:${pad(p.mi)} KST`;
+  $('#clkd').textContent=`${p.y}년 ${p.m+1}월 ${p.d}일 (${WD[p.w]})`;
+  $('#owners').innerHTML=D.owners.map(o=>{
+    const rs=D.routines.filter(r=>r.owner===o.id);
+    return `<div class="owner" style="--c:${o.color}"><h2>${esc(o.name)}<small>${esc((o.en||'').toUpperCase())}</small></h2><div class="rule"></div><span class="cnt mono">${rs.length}</span></div>
+      ${o.privacyNote?`<div class="pnote">${esc(o.privacyNote)}</div>`:''}
+      <div class="grid">${rs.map(r=>inst(r,o,now)).join('')}</div>`;
+  }).join('');
+}
+function boot(){
+  $('#legend').innerHTML=['success','quiet','skipped','fail','none'].map(k=>`<span style="--c:${ST[k].c}"><i></i>${ST[k].t}</span>`).join('');
+  $('#notes').innerHTML=(D.notes||[]).map(n=>`<li>${esc(n)}</li>`).join('');
+  if(D.updated)$('#upd').textContent=`기록 갱신 ${D.updated.replace('T',' ')} KST`;
+  render();setInterval(render,30000);
+}
+$('#f').onsubmit=async e=>{
+  e.preventDefault();$('#err').textContent='여는 중…';
+  const pv=$('#pw').value.trim().toLowerCase();
+  try{D=await decrypt(pv);try{sessionStorage.setItem('gecko-pw',pv)}catch(_){}
+    $('#gate').style.display='none';$('#app').style.display='block';boot();}
+  catch(x){$('#err').textContent='비밀번호가 달라.';$('#f').classList.remove('shake');void $('#f').offsetWidth;$('#f').classList.add('shake')}
+};
+(async()=>{try{const p=sessionStorage.getItem('gecko-pw');if(p){$('#pw').value=p;$('#f').requestSubmit()}}catch(e){}})();
+$('#lock').onclick=()=>{try{sessionStorage.removeItem('gecko-pw')}catch(_){}location.reload()};
+</script>
+</body>
+</html>
