@@ -218,7 +218,7 @@ function render(){
 }
 $('#f').onsubmit=async e=>{
   e.preventDefault();$('#err').textContent='여는 중…';
-  try{D=await decrypt($('#pw').value);try{sessionStorage.setItem('gecko-pw',$('#pw').value)}catch(_){}
+  const pv=$('#pw').value.trim().toLowerCase();try{D=await decrypt(pv);try{sessionStorage.setItem('gecko-pw',pv)}catch(_){}
     $('#gate').style.display='none';$('#app').style.display='block';render();}
   catch(x){$('#err').textContent='비밀번호가 달라.';$('#f').classList.remove('shake');void $('#f').offsetWidth;$('#f').classList.add('shake')}
 };
