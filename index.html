@@ -67,7 +67,9 @@ td{padding:7px 4px;border-top:1px solid var(--line)}td:last-child{color:var(--mu
 .calc .out{font-size:15px;background:#0f1314;border:1px solid var(--line);border-radius:12px;padding:10px 12px;line-height:1.6}
 .calc input[type=number]{width:110px}
 .muted{color:var(--mute);font-size:12px}
-footer{text-align:center;color:var(--mute);font-size:12px;margin-top:28px;opacity:.7}
+footer{text-align:center;}
+.lock{background:none;border:1px solid #ffffff22;color:var(--mute);padding:6px 12px;border-radius:999px;font-size:12px;margin-top:10px;cursor:pointer}
+footer{color:var(--mute);font-size:12px;margin-top:28px;opacity:.7}
 .hidden{display:none}
 </style>
 </head>
@@ -100,7 +102,7 @@ footer{text-align:center;color:var(--mute);font-size:12px;margin-top:28px;opacit
   <nav class="tabs" id="tabs"></nav>
   <div id="views"></div>
   <section id="shared"></section>
-  <footer>⟲ 기록은 쌓이고, 덮어쓰지 않아</footer>
+  <footer>⟲ 기록은 쌓이고, 덮어쓰지 않아<br><button class="lock" id="lock">잠그기</button></footer>
 </main>
 
 <script>
@@ -223,6 +225,7 @@ $('#f').onsubmit=async e=>{
   catch(x){$('#err').textContent='비밀번호가 달라.';$('#f').classList.remove('shake');void $('#f').offsetWidth;$('#f').classList.add('shake')}
 };
 (async()=>{try{const p=sessionStorage.getItem('gecko-pw');if(p){$('#pw').value=p;$('#f').requestSubmit()}}catch(e){}})();
+$('#lock').onclick=()=>{try{sessionStorage.removeItem('gecko-pw')}catch(_){}location.reload()};
 </script>
 </body>
 </html>
