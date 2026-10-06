@@ -96,7 +96,10 @@ header .emblem{width:84px;height:84px}
 .tot{background:linear-gradient(180deg,#0f2036,#0b1729);border:1px solid var(--line);border-top:2px solid var(--c);border-radius:12px;padding:8px 6px 7px;text-align:center;min-width:0}
 .tot .who{font-size:13px;color:var(--c);text-shadow:0 0 8px color-mix(in srgb,var(--c) 40%,transparent)}
 .tot .gauge{max-width:96px;margin:0 auto -4px}
-.tot .rate{font-size:14px;color:var(--ink)}
+.tot .rate{font-size:17px;color:var(--ink);text-shadow:0 0 8px color-mix(in srgb,var(--c) 45%,transparent)}
+.tot .gauge{max-width:110px}
+.act-legend .fl i{background:repeating-linear-gradient(45deg,#ff6b6b 0 2px,#3a1418 2px 4px);box-shadow:none;outline:1px solid #ff6b6b}
+.tot dl .msg{opacity:.7}
 .tot .rl{font-size:10px;color:var(--mute)}
 .tot dl{display:grid;grid-template-columns:auto auto;gap:1px 6px;justify-content:center;margin:6px 0 0;font-size:10.5px;color:var(--mute)}
 .tot dt{text-align:right}.tot dd{margin:0;text-align:left;color:var(--ink)}
@@ -154,7 +157,7 @@ footer{text-align:center;color:var(--mute);font-size:12px;margin-top:30px;opacit
     <ul class="notes" id="notes"></ul>
   </section>
   <section class="console act" id="act" aria-labelledby="actH">
-    <div class="act-head"><h2 id="actH">세 자매 활동<small>ACTIVITY</small></h2></div>
+    <div class="act-head"><h2 id="actH">세 자매 루틴 활동<small>ROUTINES</small></h2></div>
     <div id="actBody"><div class="act-empty">활동 숫자를 불러오는 중…</div></div>
   </section>
   <div id="owners"></div>
@@ -250,57 +253,63 @@ function render(){
 }
 /* ---- 세 자매 활동 그래프 (숫자만: 오빠→봇, 봇→오빠, 루틴 실행·실패. 내용은 없음) ---- */
 const AB=[['nia','니아','#d9b06a'],['mina','미나','#e0505a'],['cora','코라','#3fcfc4']];
-let actRange=(()=>{try{return localStorage.getItem('act-range')||'7'}catch(_){return'7'}})(), actMetric=(()=>{try{return localStorage.getItem('act-metric')||'msg'}catch(_){return'msg'}})(), actSel=null;
+let actRange=(()=>{try{return localStorage.getItem('act-range')||'7'}catch(_){return'7'}})(), actMetric=(()=>{try{return localStorage.getItem('act-metric2')||'run'}catch(_){return'run'}})(), actSel=null;
 const kdate=ms=>{const p=kp(ms);return `${p.y}-${pad(p.m+1)}-${pad(p.d)}`};
 function actDays(A){
   const t=kdate(Date.now()), sinces=AB.map(([id])=>A.bots?.[id]?.since).filter(Boolean).sort();
-  const first=sinces[0]||t, all=[];let ms=Date.parse(first+'T00:00:00Z');const end=Date.parse(t+'T00:00:00Z');
-  while(ms<=end){all.push(new Date(ms).toISOString().slice(0,10));ms+=DAY}
-  return actRange==='all'?all:all.slice(-Number(actRange));
+  const end=Date.parse(t+'T00:00:00Z'), first=Date.parse((sinces[0]||t)+'T00:00:00Z');
+  const n=actRange==='all'?Math.max(7,Math.round((end-first)/DAY)+1):Number(actRange), out=[];
+  for(let i=n-1;i>=0;i--)out.push(new Date(end-i*DAY).toISOString().slice(0,10));
+  return out; /* 7일·30일은 달력 그대로, 기록 시작 전 날은 빈 칸 */
 }
 const val=(c,m)=>!c?0:m==='msg'?(c.user||0)+(c.bot||0):(c.runs||0);
+const hasMsg=A=>AB.some(([id])=>Object.values(A.bots?.[id]?.days||{}).some(c=>(c.user||0)+(c.bot||0)>0));
 function actChart(A,days){
   const W=Math.max(300,Math.round($('#actBody').clientWidth||340)),H=190,L=28,R=6,T=10,B=26,iw=W-L-R,ih=H-T-B,n=days.length;
   const stacks=days.map(d=>AB.map(([id])=>{const b=A.bots?.[id];return (b&&b.since&&d>=b.since)?val(b.days?.[d],actMetric):0}));
   const mx=Math.max(4,...stacks.map(s=>s.reduce((a,b)=>a+b,0)));const step=mx<=10?2:mx<=20?5:mx<=60?10:mx<=150?25:mx<=300?50:100;const top=Math.ceil(mx/step)*step;
-  const y=v=>T+ih-ih*v/top, bw=iw/n, gap=Math.min(4,bw*.28);
+  const y=v=>T+ih-ih*v/top, bw=iw/n, gap=Math.max(Math.min(4,bw*.28),bw-26);
   let g='';for(let v=0;v<=top;v+=step){const yy=y(v).toFixed(1);g+=`<line x1="${L}" x2="${W-R}" y1="${yy}" y2="${yy}" stroke="${v?'#1f3550':'#2c4a6d'}" stroke-dasharray="${v?'3 4':''}"/><text x="${L-5}" y="${(+yy+3.5).toFixed(1)}" text-anchor="end" fill="#6f8aa3" font-size="9.5" font-family="JetBrains Mono,monospace">${v}</text>`}
   const every=n<=8?1:n<=16?2:n<=35?5:10, today=kdate(Date.now());let cols='';
   days.forEach((d,i)=>{const x=L+i*bw;let acc=0,bars='';
-    stacks[i].forEach((v,k)=>{if(!v)return;const y0=y(acc),y1=y(acc+v);acc+=v;bars+=`<rect x="${(x+gap/2).toFixed(1)}" y="${y1.toFixed(1)}" width="${Math.max(1,bw-gap).toFixed(1)}" height="${Math.max(.6,y0-y1).toFixed(1)}" rx="${bw>10?2:0}" fill="${AB[k][2]}" opacity="${actSel&&actSel!==d?.45:.92}" style="filter:drop-shadow(0 0 3px ${AB[k][2]}88)"/>`});
+    stacks[i].forEach((v,k)=>{if(!v)return;const y0=y(acc),y1=y(acc+v);acc+=v;const op=actSel&&actSel!==d?.45:.92,xx=(x+gap/2).toFixed(1),ww=Math.max(1,bw-gap).toFixed(1);
+      bars+=`<rect x="${xx}" y="${y1.toFixed(1)}" width="${ww}" height="${Math.max(.6,y0-y1).toFixed(1)}" rx="${bw>10?2:0}" fill="${AB[k][2]}" opacity="${op}" style="filter:drop-shadow(0 0 3px ${AB[k][2]}88)"/>`;
+      const f=actMetric==='run'?(A.bots?.[AB[k][0]]?.days?.[d]?.fail||0):0;if(f){const fy=y1,fh=Math.max(.6,(y0-y1)*f/v);bars+=`<rect x="${xx}" y="${fy.toFixed(1)}" width="${ww}" height="${fh.toFixed(1)}" fill="url(#failH)" stroke="#ff6b6b" stroke-width="1" opacity="${op}"/>`}});
     const lab=((i%every===0&&n-1-i>=Math.max(1,every*.6))||i===n-1)?`<text x="${(x+bw/2).toFixed(1)}" y="${H-9}" text-anchor="middle" fill="${d===today?'#3fcfc4':'#6f8aa3'}" font-size="9.5" font-family="JetBrains Mono,monospace">${d===today?'오늘':(+d.slice(5,7))+'/'+(+d.slice(8))}</text>`:'';
-    cols+=`<g class="col" data-d="${d}"><rect x="${x.toFixed(1)}" y="${T}" width="${bw.toFixed(1)}" height="${ih}" fill="${actSel===d?'#3fcfc414':'transparent'}"/>${bars}${lab}</g>`});
+    const pre=!AB.some(([id])=>{const b=A.bots?.[id];return b&&b.since&&d>=b.since});
+    cols+=`<g class="col" data-d="${d}"><rect x="${x.toFixed(1)}" y="${T}" width="${bw.toFixed(1)}" height="${ih}" fill="${actSel===d?'#3fcfc414':pre?'#ffffff05':'transparent'}"/>${bars}${lab}</g>`});
   const tick=`<path d="M${L} ${T+ih+3} v4 M${W-R} ${T+ih+3} v4" stroke="#2c4a6d"/>`;
-  return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="날짜별 ${actMetric==='msg'?'메시지':'루틴 실행'} 수, 니아 미나 코라 쌓은 막대">${g}${cols}${tick}</svg>`;
+  return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="날짜별 ${actMetric==='msg'?'메시지':'루틴 실행(빗금은 실패)'} 수, 니아 미나 코라 쌓은 막대"><defs><pattern id="failH" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="5" height="5" fill="#3a1418"/><line x1="0" y1="0" x2="0" y2="5" stroke="#ff6b6b" stroke-width="2"/></pattern></defs>${g}${cols}${tick}</svg>`;
 }
 function actTotals(A,days){
+  const M=hasMsg(A);
   return AB.map(([id,nm,c])=>{const b=A.bots?.[id]||{days:{}};const t={user:0,bot:0,runs:0,fail:0};
     days.forEach(d=>{const x=b.days?.[d];if(x)for(const k in t)t[k]+=x[k]||0});
     const rate=t.runs?(t.runs-t.fail)/t.runs:null;
     return `<div class="tot" style="--c:${c}"><div class="who">${nm}</div>${gauge(rate??0,c)}
       <div class="rate mono">${rate===null?'—':Math.round(rate*100)+'%'}</div><div class="rl">루틴 성공률</div>
-      <dl class="mono"><dt>오빠→</dt><dd>${t.user}</dd><dt>${nm}→</dt><dd>${t.bot}</dd><dt>루틴</dt><dd>${t.runs}</dd><dt>실패</dt><dd>${t.fail}</dd></dl></div>`}).join('');
+      <dl class="mono"><dt>실행</dt><dd>${t.runs}</dd><dt>성공</dt><dd>${t.runs-t.fail}</dd><dt>실패</dt><dd${t.fail?' style="color:var(--fail)"':''}>${t.fail}</dd>${M?`<dt class="msg">오빠→</dt><dd class="msg">${t.user}</dd><dt class="msg">${nm}→</dt><dd class="msg">${t.bot}</dd>`:''}</dl></div>`}).join('');
 }
 function actInfo(A){
   if(!actSel)return '막대를 누르면 그날 숫자가 보여';
   const p=actSel.split('-');return `<b class="mono">${+p[1]}/${+p[2]}</b> · `+AB.map(([id,nm,c])=>{const x=A.bots?.[id]?.days?.[actSel]||{};
-    return `<span style="color:${c}">${nm}</span> 오빠→${x.user||0} 봇→${x.bot||0} 루틴 ${x.runs||0}${x.fail?` (실패 ${x.fail})`:''}`}).join(' · ');
+    return `<span style="color:${c}">${nm}</span> 루틴 ${x.runs||0}${x.fail?` (실패 ${x.fail})`:''}${hasMsg(A)?` · 메시지 ${(x.user||0)+(x.bot||0)}`:''}`}).join(' · ');
 }
 function renderAct(){
   const A=D&&D.activity, body=$('#actBody');if(!body)return;
   if(!A||!A.bots){body.innerHTML='<div class="act-empty">아직 집계 전이야. 세 자매 숫자가 모이면 여기 그래프가 떠.</div>';return}
-  const days=actDays(A);if(actSel&&!days.includes(actSel))actSel=null;
+  const days=actDays(A);if(actSel&&!days.includes(actSel))actSel=null;if(!hasMsg(A))actMetric='run';
   const seg=(name,cur,opts)=>`<div class="seg" role="group" aria-label="${name}">${opts.map(([v,l])=>`<button type="button" data-k="${name}" data-v="${v}" aria-pressed="${cur===v}">${l}</button>`).join('')}</div>`;
   const since=AB.map(([id,nm])=>A.bots?.[id]?.since?`${nm} ${A.bots[id].since.slice(5).replace('-','/')}~`:null).filter(Boolean).join(' · ');
-  body.innerHTML=`<div class="act-bar">${seg('range',actRange,[['7','7일'],['30','30일'],['all','전체']])}${seg('metric',actMetric,[['msg','메시지'],['run','루틴']])}</div>
-    <div class="act-legend">${AB.map(([,nm,c])=>`<span style="--c:${c}"><i></i>${nm}</span>`).join('')}</div>
+  body.innerHTML=`<div class="act-bar">${seg('range',actRange,[['7','7일'],['30','30일'],['all','전체']])}${hasMsg(A)?seg('metric',actMetric,[['run','루틴'],['msg','메시지']]):''}</div>
+    <div class="act-legend">${AB.map(([,nm,c])=>`<span style="--c:${c}"><i></i>${nm}</span>`).join('')}${actMetric==='run'?'<span class="fl"><i></i>실패</span>':''}</div>
     ${actChart(A,days)}<div class="act-info" id="actInfo">${actInfo(A)}</div>
     <div class="tots">${actTotals(A,days)}</div>
-    <div class="act-foot">${actMetric==='msg'?'메시지 = 오빠→봇 + 봇→오빠 개수':'루틴 = 예약 실행 횟수'} · 숫자만 세고 내용은 담지 않아 · 기록 시작 ${esc(since||'—')}${A.updated?` · 집계 ${esc(A.updated.replace('T',' '))} KST`:''}</div>`;
+    <div class="act-foot">${actMetric==='msg'?'메시지 = 오빠→봇 + 봇→오빠 개수':'루틴 = 실행 횟수 · 빗금 = 실패'} · 숫자만 세고 내용은 담지 않아 · 기록 시작 ${esc(since||'—')}${A.updated?` · 집계 ${esc(A.updated.replace('T',' '))} KST`:''}</div>`;
 }
 document.addEventListener('click',e=>{
   const b=e.target.closest('#act .seg button');
-  if(b){if(b.dataset.k==='range'){actRange=b.dataset.v;try{localStorage.setItem('act-range',actRange)}catch(_){}}else{actMetric=b.dataset.v;try{localStorage.setItem('act-metric',actMetric)}catch(_){}}renderAct();return}
+  if(b){if(b.dataset.k==='range'){actRange=b.dataset.v;try{localStorage.setItem('act-range',actRange)}catch(_){}}else{actMetric=b.dataset.v;try{localStorage.setItem('act-metric2',actMetric)}catch(_){}}renderAct();return}
   const c=e.target.closest('#act .col');if(c){actSel=actSel===c.dataset.d?null:c.dataset.d;renderAct()}
 });
 let actRT=null;addEventListener('resize',()=>{clearTimeout(actRT);actRT=setTimeout(()=>{if($('#app').style.display==='block')renderAct()},150)});
