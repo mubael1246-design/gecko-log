@@ -76,6 +76,33 @@ header .emblem{width:84px;height:84px}
 .tag{font-size:10.5px;color:var(--mute);text-align:center;margin-top:4px;opacity:.85}
 .ev .radar{display:block;width:100%;max-width:150px;margin:2px auto 0}
 .ev .radar .sweep{transform-origin:60px 46px;animation:spin 6s linear infinite}
+/* ---- 세 자매 활동 (숫자만) ---- */
+.act{position:relative;overflow:hidden}
+.act::after{content:'';position:absolute;right:10px;top:10px;width:64px;height:34px;pointer-events:none;opacity:.5;background:linear-gradient(var(--teal),var(--teal)) 0 5px/42px 1px no-repeat,linear-gradient(var(--teal),var(--teal)) 42px 5px/1px 20px no-repeat,linear-gradient(var(--teal),var(--teal)) 42px 24px/18px 1px no-repeat,radial-gradient(circle,var(--teal) 2px,transparent 2.5px) 56px 20px/10px 10px no-repeat}
+.act-head{display:flex;align-items:center;gap:10px;margin-bottom:8px;padding-right:70px}
+.act-head h2{margin:0;font-size:16px;color:var(--teal)}
+.act-head h2 small{font-family:'Cinzel',serif;font-size:10.5px;letter-spacing:.16em;color:var(--mute);margin-left:6px}
+.act-bar{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;margin:4px 0 8px}
+.seg{display:inline-flex;background:#071020;border:1px solid var(--line);border-radius:9px;padding:2px;gap:2px}
+.seg button{background:none;color:var(--mute);border:0;border-radius:7px;padding:5px 10px;font-size:12px;font-weight:400;font-family:'JetBrains Mono',monospace;cursor:pointer}
+.seg button[aria-pressed=true]{color:#04131a;background:linear-gradient(135deg,#3fcfc4,#2a8f9a);font-weight:600}
+.act-legend{display:flex;gap:12px;font-size:12px;color:var(--mute);margin:2px 0 4px}
+.act-legend i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px;vertical-align:-1px;background:var(--c);box-shadow:0 0 6px var(--c)}
+.chart{display:block;width:100%;height:auto;touch-action:manipulation}
+.chart .col{cursor:pointer}
+.act-info{font-size:11.5px;color:var(--mute);min-height:1.5em;margin-top:4px;text-align:center}
+.act-info b{color:var(--ink);font-weight:600}
+.tots{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.tot{background:linear-gradient(180deg,#0f2036,#0b1729);border:1px solid var(--line);border-top:2px solid var(--c);border-radius:12px;padding:8px 6px 7px;text-align:center;min-width:0}
+.tot .who{font-size:13px;color:var(--c);text-shadow:0 0 8px color-mix(in srgb,var(--c) 40%,transparent)}
+.tot .gauge{max-width:96px;margin:0 auto -4px}
+.tot .rate{font-size:14px;color:var(--ink)}
+.tot .rl{font-size:10px;color:var(--mute)}
+.tot dl{display:grid;grid-template-columns:auto auto;gap:1px 6px;justify-content:center;margin:6px 0 0;font-size:10.5px;color:var(--mute)}
+.tot dt{text-align:right}.tot dd{margin:0;text-align:left;color:var(--ink)}
+.act-foot{font-size:10.5px;color:var(--mute);margin-top:8px;line-height:1.5;opacity:.85}
+.act-empty{font-size:12.5px;color:var(--mute);text-align:center;padding:18px 6px}
+@media(max-width:380px){.tot dl{font-size:10px}.tot .gauge{max-width:84px}}
 footer{text-align:center;color:var(--mute);font-size:12px;margin-top:30px;opacity:.85}
 .lock{background:none;border:1px solid #ffffff22;color:var(--mute);padding:6px 12px;border-radius:999px;font-size:12px;margin-top:10px;cursor:pointer;font-weight:400}
 </style>
@@ -125,6 +152,10 @@ footer{text-align:center;color:var(--mute);font-size:12px;margin-top:30px;opacit
     <div class="clock"><b class="mono" id="clk">--:--</b><span id="clkd"></span></div>
     <div class="legend" id="legend"></div>
     <ul class="notes" id="notes"></ul>
+  </section>
+  <section class="console act" id="act" aria-labelledby="actH">
+    <div class="act-head"><h2 id="actH">세 자매 활동<small>ACTIVITY</small></h2></div>
+    <div id="actBody"><div class="act-empty">활동 숫자를 불러오는 중…</div></div>
   </section>
   <div id="owners"></div>
   <footer><span id="upd"></span><br><button class="lock" id="lock">잠그기</button></footer>
@@ -217,11 +248,67 @@ function render(){
       <div class="grid">${rs.map(r=>inst(r,o,now)).join('')}</div>`;
   }).join('');
 }
+/* ---- 세 자매 활동 그래프 (숫자만: 오빠→봇, 봇→오빠, 루틴 실행·실패. 내용은 없음) ---- */
+const AB=[['nia','니아','#d9b06a'],['mina','미나','#e0505a'],['cora','코라','#3fcfc4']];
+let actRange=(()=>{try{return localStorage.getItem('act-range')||'7'}catch(_){return'7'}})(), actMetric=(()=>{try{return localStorage.getItem('act-metric')||'msg'}catch(_){return'msg'}})(), actSel=null;
+const kdate=ms=>{const p=kp(ms);return `${p.y}-${pad(p.m+1)}-${pad(p.d)}`};
+function actDays(A){
+  const t=kdate(Date.now()), sinces=AB.map(([id])=>A.bots?.[id]?.since).filter(Boolean).sort();
+  const first=sinces[0]||t, all=[];let ms=Date.parse(first+'T00:00:00Z');const end=Date.parse(t+'T00:00:00Z');
+  while(ms<=end){all.push(new Date(ms).toISOString().slice(0,10));ms+=DAY}
+  return actRange==='all'?all:all.slice(-Number(actRange));
+}
+const val=(c,m)=>!c?0:m==='msg'?(c.user||0)+(c.bot||0):(c.runs||0);
+function actChart(A,days){
+  const W=Math.max(300,Math.round($('#actBody').clientWidth||340)),H=190,L=28,R=6,T=10,B=26,iw=W-L-R,ih=H-T-B,n=days.length;
+  const stacks=days.map(d=>AB.map(([id])=>{const b=A.bots?.[id];return (b&&b.since&&d>=b.since)?val(b.days?.[d],actMetric):0}));
+  const mx=Math.max(4,...stacks.map(s=>s.reduce((a,b)=>a+b,0)));const step=mx<=10?2:mx<=20?5:mx<=60?10:mx<=150?25:mx<=300?50:100;const top=Math.ceil(mx/step)*step;
+  const y=v=>T+ih-ih*v/top, bw=iw/n, gap=Math.min(4,bw*.28);
+  let g='';for(let v=0;v<=top;v+=step){const yy=y(v).toFixed(1);g+=`<line x1="${L}" x2="${W-R}" y1="${yy}" y2="${yy}" stroke="${v?'#1f3550':'#2c4a6d'}" stroke-dasharray="${v?'3 4':''}"/><text x="${L-5}" y="${(+yy+3.5).toFixed(1)}" text-anchor="end" fill="#6f8aa3" font-size="9.5" font-family="JetBrains Mono,monospace">${v}</text>`}
+  const every=n<=8?1:n<=16?2:n<=35?5:10, today=kdate(Date.now());let cols='';
+  days.forEach((d,i)=>{const x=L+i*bw;let acc=0,bars='';
+    stacks[i].forEach((v,k)=>{if(!v)return;const y0=y(acc),y1=y(acc+v);acc+=v;bars+=`<rect x="${(x+gap/2).toFixed(1)}" y="${y1.toFixed(1)}" width="${Math.max(1,bw-gap).toFixed(1)}" height="${Math.max(.6,y0-y1).toFixed(1)}" rx="${bw>10?2:0}" fill="${AB[k][2]}" opacity="${actSel&&actSel!==d?.45:.92}" style="filter:drop-shadow(0 0 3px ${AB[k][2]}88)"/>`});
+    const lab=((i%every===0&&n-1-i>=Math.max(1,every*.6))||i===n-1)?`<text x="${(x+bw/2).toFixed(1)}" y="${H-9}" text-anchor="middle" fill="${d===today?'#3fcfc4':'#6f8aa3'}" font-size="9.5" font-family="JetBrains Mono,monospace">${d===today?'오늘':(+d.slice(5,7))+'/'+(+d.slice(8))}</text>`:'';
+    cols+=`<g class="col" data-d="${d}"><rect x="${x.toFixed(1)}" y="${T}" width="${bw.toFixed(1)}" height="${ih}" fill="${actSel===d?'#3fcfc414':'transparent'}"/>${bars}${lab}</g>`});
+  const tick=`<path d="M${L} ${T+ih+3} v4 M${W-R} ${T+ih+3} v4" stroke="#2c4a6d"/>`;
+  return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="날짜별 ${actMetric==='msg'?'메시지':'루틴 실행'} 수, 니아 미나 코라 쌓은 막대">${g}${cols}${tick}</svg>`;
+}
+function actTotals(A,days){
+  return AB.map(([id,nm,c])=>{const b=A.bots?.[id]||{days:{}};const t={user:0,bot:0,runs:0,fail:0};
+    days.forEach(d=>{const x=b.days?.[d];if(x)for(const k in t)t[k]+=x[k]||0});
+    const rate=t.runs?(t.runs-t.fail)/t.runs:null;
+    return `<div class="tot" style="--c:${c}"><div class="who">${nm}</div>${gauge(rate??0,c)}
+      <div class="rate mono">${rate===null?'—':Math.round(rate*100)+'%'}</div><div class="rl">루틴 성공률</div>
+      <dl class="mono"><dt>오빠→</dt><dd>${t.user}</dd><dt>${nm}→</dt><dd>${t.bot}</dd><dt>루틴</dt><dd>${t.runs}</dd><dt>실패</dt><dd>${t.fail}</dd></dl></div>`}).join('');
+}
+function actInfo(A){
+  if(!actSel)return '막대를 누르면 그날 숫자가 보여';
+  const p=actSel.split('-');return `<b class="mono">${+p[1]}/${+p[2]}</b> · `+AB.map(([id,nm,c])=>{const x=A.bots?.[id]?.days?.[actSel]||{};
+    return `<span style="color:${c}">${nm}</span> 오빠→${x.user||0} 봇→${x.bot||0} 루틴 ${x.runs||0}${x.fail?` (실패 ${x.fail})`:''}`}).join(' · ');
+}
+function renderAct(){
+  const A=D&&D.activity, body=$('#actBody');if(!body)return;
+  if(!A||!A.bots){body.innerHTML='<div class="act-empty">아직 집계 전이야. 세 자매 숫자가 모이면 여기 그래프가 떠.</div>';return}
+  const days=actDays(A);if(actSel&&!days.includes(actSel))actSel=null;
+  const seg=(name,cur,opts)=>`<div class="seg" role="group" aria-label="${name}">${opts.map(([v,l])=>`<button type="button" data-k="${name}" data-v="${v}" aria-pressed="${cur===v}">${l}</button>`).join('')}</div>`;
+  const since=AB.map(([id,nm])=>A.bots?.[id]?.since?`${nm} ${A.bots[id].since.slice(5).replace('-','/')}~`:null).filter(Boolean).join(' · ');
+  body.innerHTML=`<div class="act-bar">${seg('range',actRange,[['7','7일'],['30','30일'],['all','전체']])}${seg('metric',actMetric,[['msg','메시지'],['run','루틴']])}</div>
+    <div class="act-legend">${AB.map(([,nm,c])=>`<span style="--c:${c}"><i></i>${nm}</span>`).join('')}</div>
+    ${actChart(A,days)}<div class="act-info" id="actInfo">${actInfo(A)}</div>
+    <div class="tots">${actTotals(A,days)}</div>
+    <div class="act-foot">${actMetric==='msg'?'메시지 = 오빠→봇 + 봇→오빠 개수':'루틴 = 예약 실행 횟수'} · 숫자만 세고 내용은 담지 않아 · 기록 시작 ${esc(since||'—')}${A.updated?` · 집계 ${esc(A.updated.replace('T',' '))} KST`:''}</div>`;
+}
+document.addEventListener('click',e=>{
+  const b=e.target.closest('#act .seg button');
+  if(b){if(b.dataset.k==='range'){actRange=b.dataset.v;try{localStorage.setItem('act-range',actRange)}catch(_){}}else{actMetric=b.dataset.v;try{localStorage.setItem('act-metric',actMetric)}catch(_){}}renderAct();return}
+  const c=e.target.closest('#act .col');if(c){actSel=actSel===c.dataset.d?null:c.dataset.d;renderAct()}
+});
+let actRT=null;addEventListener('resize',()=>{clearTimeout(actRT);actRT=setTimeout(()=>{if($('#app').style.display==='block')renderAct()},150)});
 function boot(){
   $('#legend').innerHTML=['success','quiet','skipped','fail','none'].map(k=>`<span style="--c:${ST[k].c}"><i></i>${ST[k].t}</span>`).join('');
   $('#notes').innerHTML=(D.notes||[]).map(n=>`<li>${esc(n)}</li>`).join('');
   if(D.updated)$('#upd').textContent=`기록 갱신 ${D.updated.replace('T',' ')} KST`;
-  render();setInterval(render,30000);
+  render();renderAct();setInterval(render,30000);
 }
 const UK='ouroboros-unlock',OLDK=['hub-pw','gecko-pw','ob'];/* 허브·편지함·기록장·상태판 공유 잠금 (sessionStorage: 탭 닫으면 사라짐) */
 const unl={get(){try{return sessionStorage.getItem(UK)}catch(_){return null}},set(v){try{sessionStorage.setItem(UK,v)}catch(_){}},clear(){try{sessionStorage.removeItem(UK)}catch(_){}}};
