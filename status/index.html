@@ -223,15 +223,20 @@ function boot(){
   if(D.updated)$('#upd').textContent=`기록 갱신 ${D.updated.replace('T',' ')} KST`;
   render();setInterval(render,30000);
 }
-$('#f').onsubmit=async e=>{
-  e.preventDefault();$('#err').textContent='여는 중…';
-  const pv=$('#pw').value.trim().toLowerCase();
-  try{D=await decrypt(pv);try{sessionStorage.setItem('gecko-pw',pv)}catch(_){}
+const UK='ouroboros-unlock',OLDK=['hub-pw','gecko-pw','ob'];/* 허브·편지함·기록장·상태판 공유 잠금 (sessionStorage: 탭 닫으면 사라짐) */
+const unl={get(){try{return sessionStorage.getItem(UK)}catch(_){return null}},set(v){try{sessionStorage.setItem(UK,v)}catch(_){}},clear(){try{sessionStorage.removeItem(UK)}catch(_){}}};
+try{OLDK.forEach(k=>sessionStorage.removeItem(k))}catch(_){}
+async function unlock(pv,silent){
+  $('#err').textContent='여는 중…';
+  try{D=await decrypt(pv);unl.set(pv);$('#err').textContent='';
     $('#gate').style.display='none';$('#app').style.display='block';boot();}
-  catch(x){$('#err').textContent='비밀번호가 달라.';$('#f').classList.remove('shake');void $('#f').offsetWidth;$('#f').classList.add('shake')}
-};
-(async()=>{try{const p=sessionStorage.getItem('gecko-pw');if(p){$('#pw').value=p;$('#f').requestSubmit()}}catch(e){}})();
-$('#lock').onclick=()=>{try{sessionStorage.removeItem('gecko-pw')}catch(_){}location.reload()};
+  catch(x){
+    if(silent){unl.clear();$('#err').textContent='';return}
+    $('#err').textContent='비밀번호가 달라.';$('#f').classList.remove('shake');void $('#f').offsetWidth;$('#f').classList.add('shake')}
+}
+$('#f').onsubmit=e=>{e.preventDefault();unlock($('#pw').value.trim().toLowerCase())};
+{const p=unl.get();if(p)unlock(p,true)}
+$('#lock').onclick=()=>{unl.clear();location.reload()};
 </script>
 </body>
 </html>
