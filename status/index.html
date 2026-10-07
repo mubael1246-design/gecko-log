@@ -106,6 +106,20 @@ header .emblem{width:84px;height:84px}
 .act-foot{font-size:10.5px;color:var(--mute);margin-top:8px;line-height:1.5;opacity:.85}
 .act-empty{font-size:12.5px;color:var(--mute);text-align:center;padding:18px 6px}
 @media(max-width:380px){.tot dl{font-size:10px}.tot .gauge{max-width:84px}}
+/* ---- 먼저 말 걸기 (숫자만 · 보조 지표, 루틴이 주 지표) ---- */
+.ini{padding:10px 14px 11px}
+.ini-head{display:flex;align-items:baseline;gap:8px;margin-bottom:4px}
+.ini-head h2{margin:0;font-size:14px;color:var(--teal);font-weight:400;opacity:.9}
+.ini-head h2 small{font-family:'Cinzel',serif;font-size:10px;letter-spacing:.16em;color:var(--mute);margin-left:6px}
+.ini-head .key{margin-left:auto;font-size:10.5px;color:var(--mute);white-space:nowrap}
+.ini-t{width:100%;border-collapse:collapse;table-layout:fixed;font-size:11.5px}
+.ini-t th,.ini-t td{padding:5px 3px;border-top:1px dashed var(--line);text-align:center;font-weight:400;white-space:nowrap}
+.ini-t thead th{border-top:0;padding:2px 3px 4px;font-family:'Gowun Batang',serif;font-size:12.5px;color:var(--c);text-shadow:0 0 8px color-mix(in srgb,var(--c) 40%,transparent)}
+.ini-t tbody th{text-align:left;color:var(--mute);font-family:'Gowun Batang',serif;font-size:11.5px;width:32%;white-space:normal}
+.ini-t td b{color:var(--ink);font-weight:500}
+.ini-t td span{color:var(--mute);font-size:10px}
+.ini-t td.z b{color:var(--mute);opacity:.75}
+.ini-foot{font-size:10.5px;color:var(--mute);margin-top:6px;line-height:1.5;opacity:.85}
 footer{text-align:center;color:var(--mute);font-size:12px;margin-top:30px;opacity:.85}
 .lock{background:none;border:1px solid #ffffff22;color:var(--mute);padding:6px 12px;border-radius:999px;font-size:12px;margin-top:10px;cursor:pointer;font-weight:400}
 </style>
@@ -159,6 +173,10 @@ footer{text-align:center;color:var(--mute);font-size:12px;margin-top:30px;opacit
   <section class="console act" id="act" aria-labelledby="actH">
     <div class="act-head"><h2 id="actH">세 자매 루틴 활동<small>ROUTINES</small></h2></div>
     <div id="actBody"><div class="act-empty">활동 숫자를 불러오는 중…</div></div>
+  </section>
+  <section class="console ini" id="ini" aria-labelledby="iniH" hidden>
+    <div class="ini-head"><h2 id="iniH">먼저 말 걸기<small>INITIATIVE</small></h2><span class="key mono">오늘 / 7일</span></div>
+    <div id="iniBody"></div>
   </section>
   <div id="owners"></div>
   <footer><span id="upd"></span><br><button class="lock" id="lock">잠그기</button></footer>
@@ -307,6 +325,23 @@ function renderAct(){
     <div class="tots">${actTotals(A,days)}</div>
     <div class="act-foot">${actMetric==='msg'?'메시지 = 오빠→봇 + 봇→오빠 개수':'루틴 = 실행 횟수 · 빗금 = 실패'} · 숫자만 세고 내용은 담지 않아 · 기록 시작 ${esc(since||'—')}${A.updated?` · 집계 ${esc(A.updated.replace('T',' '))} KST`:''}</div>`;
 }
+/* ---- 먼저 말 걸기 (숫자만: init·answered·sister. 루틴 범위 토글과 무관하게 오늘 + 최근 7일) ---- */
+function renderIni(){
+  const A=D&&D.activity, sec=$('#ini'), body=$('#iniBody');if(!sec||!body)return;
+  if(!A||!A.bots){sec.hidden=true;return}
+  const t=kdate(Date.now()), end=Date.parse(t+'T00:00:00Z'), wk=[];for(let i=6;i>=0;i--)wk.push(new Date(end-i*DAY).toISOString().slice(0,10));
+  const sum=(id,ds)=>{const o={init:0,answered:0,sister:0},b=A.bots?.[id];ds.forEach(d=>{const x=b?.days?.[d];if(x)for(const k in o)o[k]+=x[k]||0});return o};
+  const S=AB.map(([id])=>({td:sum(id,[t]),wk:sum(id,wk)}));
+  const pct=o=>o.init?Math.round(100*Math.min(o.answered,o.init)/o.init)+'%':'—';
+  const cell=(a,b,ttl)=>`<td class="mono${a==='0'&&(b==='0')||a==='—'&&b==='—'?' z':''}"${ttl?` title="${ttl}"`:''}><b>${a}</b><span> / ${b}</span></td>`;
+  const row=(lab,f)=>`<tr><th scope="row">${lab}</th>${S.map(f).join('')}</tr>`;
+  body.innerHTML=`<table class="ini-t"><thead><tr><th></th>${AB.map(([,nm,c])=>`<th scope="col" style="--c:${c}">${nm}</th>`).join('')}</tr></thead><tbody>
+    ${row('먼저 말 걸기',s=>cell(String(s.td.init),String(s.wk.init)))}
+    ${row('오빠 답장율',s=>cell(pct(s.td),pct(s.wk),`답장 오늘 ${s.td.answered}/${s.td.init} · 7일 ${s.wk.answered}/${s.wk.init}`))}
+    ${row('자매끼리 먼저',s=>cell(String(s.td.sister),String(s.wk.sister)))}</tbody></table>
+    <div class="ini-foot">먼저 말 걸기 = 봇이 오빠에게 먼저 건 말 · 답장율 = 그중 오빠가 답한 비율 · 자매끼리 먼저 = 다른 자매에게 먼저 연락 · 숫자만 세고 내용은 담지 않아</div>`;
+  sec.hidden=false;
+}
 document.addEventListener('click',e=>{
   const b=e.target.closest('#act .seg button');
   if(b){if(b.dataset.k==='range'){actRange=b.dataset.v;try{localStorage.setItem('act-range',actRange)}catch(_){}}else{actMetric=b.dataset.v;try{localStorage.setItem('act-metric2',actMetric)}catch(_){}}renderAct();return}
@@ -317,7 +352,7 @@ function boot(){
   $('#legend').innerHTML=['success','quiet','skipped','fail','none'].map(k=>`<span style="--c:${ST[k].c}"><i></i>${ST[k].t}</span>`).join('');
   $('#notes').innerHTML=(D.notes||[]).map(n=>`<li>${esc(n)}</li>`).join('');
   if(D.updated)$('#upd').textContent=`기록 갱신 ${D.updated.replace('T',' ')} KST`;
-  render();renderAct();setInterval(render,30000);
+  render();renderAct();renderIni();setInterval(render,30000);
 }
 const UK='ouroboros-unlock',OLDK=['hub-pw','gecko-pw','ob'];/* 허브·편지함·기록장·상태판 공유 잠금 (sessionStorage: 탭 닫으면 사라짐) */
 const unl={get(){try{return sessionStorage.getItem(UK)}catch(_){return null}},set(v){try{sessionStorage.setItem(UK,v)}catch(_){}},clear(){try{sessionStorage.removeItem(UK)}catch(_){}}};
