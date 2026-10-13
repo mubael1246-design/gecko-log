@@ -177,6 +177,7 @@ function view(id){
   return `<div class="view" data-id="${id}" style="--c:${c}">
   <div class="card"><div class="profile"><div class="avatar">${GECKO_SVG(c)}</div><div><div class="name">${esc(g.ko)}<small>${esc(id.toUpperCase())}</small></div>
     <div class="chips"><span class="chip">${esc(g.morph)}</span><span class="chip">${esc(g.sex)}</span>${g.enclosure?`<span class="chip">사육장 ${esc(g.enclosure)}</span>`:''}${ws.length?`<span class="chip">${ws.at(-1).approx?'~':''}${ws.at(-1).grams} g</span>`:''}</div></div></div>
+    ${g.hatch?ageBlock(g.hatch):''}
     ${g.note?`<p class="note">${esc(g.note)}</p>`:''}</div>
   <div class="card"><h2>오늘의 CGD · ${fmtD(TODAY)}</h2>
     <div class="big"><div><b>${g2(cg.amt.powder)} g</b><span>파우더</span></div><div><b>${g2(cg.amt.water)} g</b><span>물</span></div></div>
@@ -284,6 +285,21 @@ function syncLock(restored){const k=unl.get(),openNow=$('#gate').style.display==
 addEventListener('pagehide',e=>{if(e.persisted&&$('#gate').style.display==='none')document.documentElement.style.visibility='hidden'});
 addEventListener('pageshow',e=>{if(e.persisted&&syncLock(true))document.documentElement.style.visibility=''});
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')syncLock(false)});
+
+// 해칭 후 나이 (브라우저에서 계산) + 대략적 체중 참고 (출처: HerpMath)
+const GROWTH_REF=[[0,'해칭 직후','2–3'],[3,'3개월','4–10'],[6,'6개월','8–20'],[9,'9개월','15–28'],[12,'12개월','20–38'],[18,'18개월','30–50'],[24,'2년','35–55']];
+function ageBlock(h){
+  const [y,m,d]=h.split('-').map(Number), hd=new Date(y,m-1,d), now=new Date(); now.setHours(0,0,0,0);
+  const days=Math.round((now-hd)/864e5);
+  let mo=(now.getFullYear()-y)*12+(now.getMonth()-(m-1)); if(now.getDate()<d) mo--;
+  const yy=Math.floor(mo/12), mm=mo%12;
+  const age=(yy?`${yy}년 `:'')+`${mm}개월`;
+  let lo=GROWTH_REF[0],hi=null;
+  for(let i=0;i<GROWTH_REF.length;i++){if(GROWTH_REF[i][0]<=mo){lo=GROWTH_REF[i];hi=GROWTH_REF[i+1]||null}}
+  const ref=hi&&lo[0]!==mo?`${lo[1]} ${lo[2]} g ~ ${hi[1]} ${hi[2]} g`:`${lo[1]} ${lo[2]} g`;
+  return `<div class="muted" style="margin-top:10px">해칭 후 ${age} (${days}일)</div>
+  <div class="muted" style="font-size:12px;margin-top:2px">같은 나이대 평균 체중(대략적 참고): ${ref} · 개체차가 커요 · 출처 <a href="https://herpmath.com/crested-gecko/growth-chart/" target="_blank" rel="noopener" style="color:inherit">HerpMath</a></div>`;
+}
 </script>
 </body>
 </html>
