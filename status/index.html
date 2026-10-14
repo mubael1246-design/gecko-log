@@ -281,7 +281,7 @@ function render(){
   }).join('');
 }
 /* ---- 세 자매 활동 그래프 (숫자만: 오빠→봇, 봇→오빠, 루틴 실행·실패. 내용은 없음) ---- */
-const AB=[['nia','니아','#d9b06a'],['mina','미나','#e0505a'],['cora','코라','#3fcfc4']];
+const AB=[['nia','니아','#d9b06a'],['mina','미나','#e0505a'],['cora','코라','#3fcfc4'],['eris','에리스','#A066FF']];
 let actRange=(()=>{try{return localStorage.getItem('act-range')||'7'}catch(_){return'7'}})(), actMetric=(()=>{try{return localStorage.getItem('act-metric2')||'run'}catch(_){return'run'}})(), actSel=null;
 const kdate=ms=>{const p=kp(ms);return `${p.y}-${pad(p.m+1)}-${pad(p.d)}`};
 function actDays(A){
